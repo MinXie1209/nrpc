@@ -37,6 +37,7 @@ public class ServiceManager {
      **/
 
     public static void register(Class<?> classApi, Class<?> classImpl) {
+        log.debug("注册服务-api-{},-impl-{}", classApi.getName(), classImpl.getName());
         classMap.put(classApi.getName(), classImpl.getName());
     }
 }

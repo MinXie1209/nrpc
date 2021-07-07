@@ -71,13 +71,13 @@ public class RpcServer implements Runnable {
         log.debug("初始化RpcServer");
     }
 
-    public static void main(String[] args) {
-        ServiceManager.register(OrderService.class, OrderServiceImpl.class);
-        RpcServer rpcServer = new RpcServer(8000);
-        rpcServer.init();
-        Thread thread = new Thread(rpcServer);
-        thread.start();
-    }
+//    public static void main(String[] args) {
+//        ServiceManager.register(OrderService.class, OrderServiceImpl.class);
+//        RpcServer rpcServer = new RpcServer(8000);
+//        rpcServer.init();
+//        Thread thread = new Thread(rpcServer);
+//        thread.start();
+//    }
 
     /**
      * 启动服务

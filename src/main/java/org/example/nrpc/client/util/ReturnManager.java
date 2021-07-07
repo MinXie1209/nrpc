@@ -24,7 +24,11 @@ public class ReturnManager {
 
     public static void completeReturn(long msgId, Object returnObj) {
         if (futureMap.containsKey(msgId)) {
-            futureMap.get(msgId).complete(returnObj);
+            if (returnObj != null && Throwable.class.isAssignableFrom(returnObj.getClass())) {
+                futureMap.get(msgId).completeExceptionally((Throwable) returnObj);
+            } else {
+                futureMap.get(msgId).complete(returnObj);
+            }
             futureMap.remove(msgId);
         }
     }

@@ -60,22 +60,24 @@ public class RpcServerHandler extends SimpleChannelInboundHandler<RpcMsg> {
             Method method = aClass.getMethod(msg.getMethodName(), msg.getParameterTypes());
             return method.invoke(obj, msg.getArgs());
         } catch (ClassNotFoundException e) {
-            e.printStackTrace();
             log.error("找不到类：{}", msg.getClassName());
+            return e;
         } catch (NoSuchMethodException e) {
-            e.printStackTrace();
             log.error("找不到方法:{}", msg.getMethodName());
+            return e;
         } catch (IllegalAccessException e) {
-            e.printStackTrace();
             log.error("", e);
+            return e;
         } catch (InstantiationException e) {
-            e.printStackTrace();
             log.error("", e);
+            return e;
         } catch (InvocationTargetException e) {
-            e.printStackTrace();
             log.error("", e);
+            return e;
+        } catch (Exception e) {
+            log.error("", e);
+            return e;
         }
-        return null;
     }
 
     @Override

@@ -43,26 +43,26 @@ public class RpcClient implements Runnable {
     private Channel channel;
     private ChannelFutureListener channelFutureListener = new ConnectFutureListener(this);
 
-    public static void main(String[] args) {
-        RpcClient rpcClient = new RpcClient("127.0.0.1", 8000);
-        rpcClient.init();
-        Thread thread = new Thread(rpcClient);
-        thread.setDaemon(false);
-        thread.start();
-        try {
-            Thread.sleep(5000);
-            BeanFactory.setRpcClient(rpcClient);
-            OrderService orderService = BeanFactory.getBean(OrderService.class);
-            orderService.getOrderStatus("OD91323612369213");
-            String orderNo = "OD123721037021";
-            Future<Integer> orderStatus = orderService.getOrderStatusAsync(orderNo);
-            log.info("订单-{}-状态：{}", orderNo, orderStatus.get());
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        } catch (ExecutionException e) {
-            e.printStackTrace();
-        }
-    }
+//    public static void main(String[] args) {
+//        RpcClient rpcClient = new RpcClient("127.0.0.1", 8000);
+//        rpcClient.init();
+//        Thread thread = new Thread(rpcClient);
+//        thread.setDaemon(false);
+//        thread.start();
+//        try {
+//            Thread.sleep(5000);
+//            BeanFactory.setRpcClient(rpcClient);
+//            OrderService orderService = BeanFactory.getBean(OrderService.class);
+//            orderService.getOrderStatus("OD91323612369213");
+//            String orderNo = "OD123721037021";
+//            Future<Integer> orderStatus = orderService.getOrderStatusAsync(orderNo);
+//            log.info("订单-{}-状态：{}", orderNo, orderStatus.get());
+//        } catch (InterruptedException e) {
+//            e.printStackTrace();
+//        } catch (ExecutionException e) {
+//            e.printStackTrace();
+//        }
+//    }
 
     @PostConstruct
     public void init() {

@@ -98,7 +98,7 @@ public class RpcMethodInterceptor implements MethodInterceptor {
 
     private void handler(Method method, Object[] args, CompletableFuture<Object> completableFuture) {
         long requestId = SnowflakeUtil.snowflakeId();
-        ReturnManager.futureMap.put(requestId, completableFuture);
+        ReturnManager.putFuture(requestId, completableFuture);
         handler(method, args, requestId);
     }
 }

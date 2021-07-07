@@ -77,9 +77,13 @@ public class HeartbeatHandler extends ChannelInboundHandlerAdapter {
             RpcMsg rpcMsg = (RpcMsg) msg;
             if (rpcMsg.getMsgType() == RpcMsg.MsgType.PING) {
                 InetSocketAddress socketAddress = (InetSocketAddress) ctx.channel().remoteAddress();
-                log.debug("读取到-{}-发起的PING请求", socketAddress.getAddress().getHostAddress());
+                log.debug("读取到-{}-的PING请求", socketAddress.getAddress().getHostAddress());
                 //响应
                 pong(ctx);
+            } else if (rpcMsg.getMsgType() == RpcMsg.MsgType.PONG) {
+                InetSocketAddress socketAddress = (InetSocketAddress) ctx.channel().remoteAddress();
+                log.debug("读取到-{}-的PONG响应", socketAddress.getAddress().getHostAddress());
+
             } else {
                 super.channelRead(ctx, msg);
             }

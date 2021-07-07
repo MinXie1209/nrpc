@@ -1,5 +1,6 @@
 package org.example.nrpc.client.listener;
 
+import io.netty.channel.Channel;
 import io.netty.channel.ChannelFuture;
 import io.netty.channel.ChannelFutureListener;
 import lombok.NonNull;
@@ -25,6 +26,7 @@ public class ConnectFutureListener implements ChannelFutureListener {
     public void operationComplete(ChannelFuture future) {
         if (future.isSuccess()) {
             log.debug("连接成功");
+            rpcClient.setChannel(future.channel());
         } else {
             log.debug("连接失败，1s后重新建立连接");
             future.channel().eventLoop().schedule(rpcClient, 1, TimeUnit.SECONDS);

@@ -4,6 +4,12 @@ import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
 import lombok.extern.slf4j.Slf4j;
 import org.example.nrpc.model.RpcMsg;
+import org.example.nrpc.server.util.ServiceManager;
+
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Future;
 
 /**
  * RPC响应处理
@@ -15,7 +21,61 @@ import org.example.nrpc.model.RpcMsg;
 public class RpcServerHandler extends SimpleChannelInboundHandler<RpcMsg> {
     @Override
     protected void channelRead0(ChannelHandlerContext ctx, RpcMsg msg) {
+        log.debug("收到请求:{}", msg);
+        if (msg.getMsgType() == RpcMsg.MsgType.REQUEST) {
+            Object returnObj = invoke(msg);
+            response(ctx, returnObj, msg.getMsgId());
+        }
+    }
 
+    private void response(ChannelHandlerContext ctx, Object returnObj, long msgId) {
+        if (returnObj == null || !Future.class.isAssignableFrom(returnObj.getClass())) {
+            ctx.writeAndFlush(RpcMsg.response(msgId, returnObj));
+        } else {
+            try {
+                ctx.writeAndFlush(RpcMsg.response(msgId, ((Future) returnObj).get()));
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            } catch (ExecutionException e) {
+                e.printStackTrace();
+            }
+        }
+
+    }
+
+    /**
+     * 反射调用
+     *
+     * @param msg
+     * @return Object
+     * @author Jim
+     * @since 2021/7/7 上午11:40
+     **/
+
+    private Object invoke(RpcMsg msg) {
+        try {
+            Class<?> aClass = Class.forName(ServiceManager.getClassImpl(msg.getClassName()));
+            Object obj = aClass.newInstance();
+            //找实现类
+            Method method = aClass.getMethod(msg.getMethodName(), msg.getParameterTypes());
+            return method.invoke(obj, msg.getArgs());
+        } catch (ClassNotFoundException e) {
+            e.printStackTrace();
+            log.error("找不到类：{}", msg.getClassName());
+        } catch (NoSuchMethodException e) {
+            e.printStackTrace();
+            log.error("找不到方法:{}", msg.getMethodName());
+        } catch (IllegalAccessException e) {
+            e.printStackTrace();
+            log.error("", e);
+        } catch (InstantiationException e) {
+            e.printStackTrace();
+            log.error("", e);
+        } catch (InvocationTargetException e) {
+            e.printStackTrace();
+            log.error("", e);
+        }
+        return null;
     }
 
     @Override

@@ -1,10 +1,7 @@
 package org.example.nrpc.client;
 
 import io.netty.bootstrap.Bootstrap;
-import io.netty.channel.ChannelFuture;
-import io.netty.channel.ChannelFutureListener;
-import io.netty.channel.ChannelInitializer;
-import io.netty.channel.EventLoopGroup;
+import io.netty.channel.*;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioSocketChannel;
@@ -13,14 +10,18 @@ import lombok.Data;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.example.nrpc.api.OrderService;
 import org.example.nrpc.client.handler.RpcClientHandler;
 import org.example.nrpc.client.listener.ConnectFutureListener;
 import org.example.nrpc.protostuff.ProtostuffDecoder;
 import org.example.nrpc.protostuff.ProtostuffEncoder;
 import org.example.nrpc.handler.HeartbeatHandler;
+import org.example.nrpc.proxy.BeanFactory;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Future;
 
 /**
  * Rpc客户端
@@ -39,6 +40,7 @@ public class RpcClient implements Runnable {
     @NonNull
     private int inetPort;
 
+    private Channel channel;
     private ChannelFutureListener channelFutureListener = new ConnectFutureListener(this);
 
     public static void main(String[] args) {
@@ -47,6 +49,19 @@ public class RpcClient implements Runnable {
         Thread thread = new Thread(rpcClient);
         thread.setDaemon(false);
         thread.start();
+        try {
+            Thread.sleep(5000);
+            BeanFactory.setRpcClient(rpcClient);
+            OrderService orderService = BeanFactory.getBean(OrderService.class);
+            orderService.getOrderStatus("OD91323612369213");
+            String orderNo = "OD123721037021";
+            Future<Integer> orderStatus = orderService.getOrderStatusAsync(orderNo);
+            log.info("订单-{}-状态：{}", orderNo, orderStatus.get());
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        } catch (ExecutionException e) {
+            e.printStackTrace();
+        }
     }
 
     @PostConstruct

@@ -12,10 +12,13 @@ import io.netty.handler.timeout.IdleStateHandler;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.example.nrpc.api.OrderService;
+import org.example.nrpc.api.impl.OrderServiceImpl;
 import org.example.nrpc.handler.HeartbeatHandler;
 import org.example.nrpc.protostuff.ProtostuffDecoder;
 import org.example.nrpc.protostuff.ProtostuffEncoder;
 import org.example.nrpc.server.handler.RpcServerHandler;
+import org.example.nrpc.server.util.ServiceManager;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
@@ -69,11 +72,13 @@ public class RpcServer implements Runnable {
     }
 
     public static void main(String[] args) {
+        ServiceManager.register(OrderService.class, OrderServiceImpl.class);
         RpcServer rpcServer = new RpcServer(8000);
         rpcServer.init();
         Thread thread = new Thread(rpcServer);
         thread.start();
     }
+
     /**
      * 启动服务
      *

@@ -8,6 +8,7 @@ import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.example.nrpc.client.RpcClient;
+import org.example.nrpc.client.util.ReturnManager;
 import org.example.nrpc.model.RpcMsg;
 
 import java.util.concurrent.TimeUnit;
@@ -26,7 +27,9 @@ public class RpcClientHandler extends SimpleChannelInboundHandler<RpcMsg> {
 
     @Override
     protected void channelRead0(ChannelHandlerContext ctx, RpcMsg msg) {
-
+        if (msg.getMsgType() == RpcMsg.MsgType.RESPONSE) {
+            ReturnManager.completeReturn(msg.getMsgId(), msg.getReturnObj());
+        }
     }
 
     @Override

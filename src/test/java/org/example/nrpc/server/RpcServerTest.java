@@ -28,7 +28,7 @@ class RpcServerTest {
     }
 
     @AfterEach
-    void setDown() throws InterruptedException {
+    void tearDown() throws InterruptedException {
         rpcServer.destroy();
     }
 }

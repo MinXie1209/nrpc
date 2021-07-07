@@ -2,6 +2,7 @@ package org.example.nrpc.client;
 
 import io.netty.bootstrap.Bootstrap;
 import io.netty.channel.ChannelFuture;
+import io.netty.channel.ChannelFutureListener;
 import io.netty.channel.ChannelInitializer;
 import io.netty.channel.EventLoopGroup;
 import io.netty.channel.nio.NioEventLoopGroup;
@@ -19,6 +20,7 @@ import org.example.nrpc.protostuff.ProtostuffEncoder;
 import org.example.nrpc.handler.HeartbeatHandler;
 
 import javax.annotation.PostConstruct;
+import javax.annotation.PreDestroy;
 
 /**
  * Rpc客户端
@@ -37,6 +39,16 @@ public class RpcClient implements Runnable {
     @NonNull
     private int inetPort;
 
+    private ChannelFutureListener channelFutureListener = new ConnectFutureListener(this);
+
+    public static void main(String[] args) {
+        RpcClient rpcClient = new RpcClient("127.0.0.1", 8000);
+        rpcClient.init();
+        Thread thread = new Thread(rpcClient);
+        thread.setDaemon(false);
+        thread.start();
+    }
+
     @PostConstruct
     public void init() {
         group = new NioEventLoopGroup();
@@ -51,11 +63,11 @@ public class RpcClient implements Runnable {
                         //解码器 byte[] -> Object
                         ch.pipeline().addLast("decoder", new ProtostuffDecoder(1024 * 1024, 0, 4, 0, 4));
                         //心跳检测 60s没有读操作触发事件IdleStateEvent
-                        ch.pipeline().addLast(new IdleStateHandler(60, 0, 0));
+                        ch.pipeline().addLast(new IdleStateHandler(65, 0, 0));
                         //心跳处理
                         ch.pipeline().addLast(new HeartbeatHandler());
                         //rpc请求处理
-                        ch.pipeline().addLast(new RpcClientHandler());
+                        ch.pipeline().addLast(new RpcClientHandler(RpcClient.this));
                     }
                 });
 
@@ -64,6 +76,17 @@ public class RpcClient implements Runnable {
     @Override
     public void run() {
         ChannelFuture channelFuture = bootstrap.connect(inetHost, inetPort);
-        channelFuture.addListener(new ConnectFutureListener());
+        channelFuture.addListener(channelFutureListener);
+    }
+
+    @PreDestroy
+    public void destroy() {
+        log.debug("线程池连接资源释放");
+        try {
+            group.shutdownGracefully().sync();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+            log.error("", e);
+        }
     }
 }

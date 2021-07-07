@@ -36,6 +36,7 @@ public class HeartbeatHandler extends ChannelInboundHandlerAdapter {
 
     @Override
     public void userEventTriggered(ChannelHandlerContext ctx, Object evt) throws Exception {
+        log.debug("空闲事件检测：{}", evt);
         super.userEventTriggered(ctx, evt);
         //不是心跳事件
         if (!IdleStateEvent.class.isAssignableFrom(evt.getClass())) {
@@ -46,7 +47,7 @@ public class HeartbeatHandler extends ChannelInboundHandlerAdapter {
             //空闲读事件
             int times = idleNum.incrementAndGet();
             if (times >= 3) {
-                log.debug("三次空闲读 断开客户端连接");
+                log.debug("三次空闲读 断开对端连接");
                 //三次空闲读 断开客户端连接
                 ctx.channel().close();
             } else {
@@ -70,7 +71,7 @@ public class HeartbeatHandler extends ChannelInboundHandlerAdapter {
 
     @Override
     public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
-        log.debug("重置空闲读计数");
+        log.debug("接受读事件:{},重置空闲读计数", msg);
         idleNum.set(0);
         if (RpcMsg.class.isAssignableFrom(msg.getClass())) {
             RpcMsg rpcMsg = (RpcMsg) msg;

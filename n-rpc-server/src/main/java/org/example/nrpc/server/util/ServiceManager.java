@@ -1,6 +1,10 @@
 package org.example.nrpc.server.util;
 
+import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
+import org.example.nrpc.common.model.RpcAddress;
+import org.example.nrpc.register.api.RpcRegister;
+import org.example.nrpc.register.api.model.RpcServiceInstance;
 
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -16,8 +20,11 @@ public class ServiceManager {
      * key 接口类全限定名
      * value 实现类全限定名
      **/
-
     private static ConcurrentHashMap<String, String> classMap = new ConcurrentHashMap<>();
+    @Setter
+    private static RpcRegister rpcRegister;
+    @Setter
+    private static RpcAddress rpcAddress;
 
     public static String getClassImpl(String className) throws ClassNotFoundException {
         if (!classMap.containsKey(className)) {
@@ -39,5 +46,15 @@ public class ServiceManager {
     public static void register(Class<?> classApi, Class<?> classImpl) {
         log.debug("注册服务-api-{},-impl-{}", classApi.getName(), classImpl.getName());
         classMap.put(classApi.getName(), classImpl.getName());
+        try {
+            rpcRegister.register(RpcServiceInstance.builder()
+                    .serviceName(classApi.getName())
+                    .address(rpcAddress.getHost())
+                    .port(rpcAddress.getPort())
+                    .build());
+        } catch (Exception e) {
+            e.printStackTrace();
+            log.error("注册服务-{}-到注册中心失败", classApi.getName());
+        }
     }
 }

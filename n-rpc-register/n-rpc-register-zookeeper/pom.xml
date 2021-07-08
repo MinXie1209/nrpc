@@ -3,30 +3,40 @@
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <parent>
-        <artifactId>n-rpc</artifactId>
+        <artifactId>n-rpc-register</artifactId>
         <groupId>org.example</groupId>
         <version>${revision}</version>
-        <relativePath>../pom.xml</relativePath>
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
-    <artifactId>n-rpc-server</artifactId>
-    <packaging>jar</packaging>
+    <artifactId>n-rpc-register-zookeeper</artifactId>
 
     <properties>
         <maven.compiler.source>8</maven.compiler.source>
         <maven.compiler.target>8</maven.compiler.target>
     </properties>
     <dependencies>
-        <dependency>
-            <groupId>org.example</groupId>
-            <artifactId>n-rpc-common</artifactId>
-            <version>${revision}</version>
-        </dependency>
+        <!--api-->
         <dependency>
             <groupId>org.example</groupId>
             <artifactId>n-rpc-register-api</artifactId>
             <version>${revision}</version>
+        </dependency>
+        <!--zookeeper-->
+        <dependency>
+            <groupId>org.apache.curator</groupId>
+            <artifactId>curator-framework</artifactId>
+            <version>5.1.0</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.curator</groupId>
+            <artifactId>curator-recipes</artifactId>
+            <version>5.1.0</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.curator</groupId>
+            <artifactId>curator-x-discovery</artifactId>
+            <version>5.1.0</version>
         </dependency>
     </dependencies>
 </project>

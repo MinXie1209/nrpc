@@ -3,30 +3,31 @@
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <parent>
-        <artifactId>n-rpc</artifactId>
+        <artifactId>n-rpc-register</artifactId>
         <groupId>org.example</groupId>
         <version>${revision}</version>
-        <relativePath>../pom.xml</relativePath>
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
-    <artifactId>n-rpc-server</artifactId>
-    <packaging>jar</packaging>
+    <artifactId>n-rpc-register-api</artifactId>
 
     <properties>
         <maven.compiler.source>8</maven.compiler.source>
         <maven.compiler.target>8</maven.compiler.target>
+        <auto-service.version>1.0</auto-service.version>
     </properties>
     <dependencies>
         <dependency>
-            <groupId>org.example</groupId>
-            <artifactId>n-rpc-common</artifactId>
-            <version>${revision}</version>
+            <groupId>com.google.auto.service</groupId>
+            <artifactId>auto-service-annotations</artifactId>
+            <version>1.0-rc6</version>
+            <scope>compile</scope>
         </dependency>
         <dependency>
-            <groupId>org.example</groupId>
-            <artifactId>n-rpc-register-api</artifactId>
-            <version>${revision}</version>
+            <groupId>com.google.auto.service</groupId>
+            <artifactId>auto-service</artifactId>
+            <version>1.0-rc6</version>
+            <scope>compile</scope>
         </dependency>
     </dependencies>
 </project>

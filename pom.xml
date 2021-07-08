@@ -13,6 +13,7 @@
         <module>n-rpc-server</module>
         <module>n-rpc-common</module>
         <module>simple</module>
+        <module>n-rpc-register</module>
     </modules>
 
     <properties>

@@ -9,24 +9,14 @@
         <relativePath>../pom.xml</relativePath>
     </parent>
     <modelVersion>4.0.0</modelVersion>
-
-    <artifactId>n-rpc-server</artifactId>
-    <packaging>jar</packaging>
-
+    <packaging>pom</packaging>
+    <artifactId>n-rpc-register</artifactId>
     <properties>
         <maven.compiler.source>8</maven.compiler.source>
         <maven.compiler.target>8</maven.compiler.target>
     </properties>
-    <dependencies>
-        <dependency>
-            <groupId>org.example</groupId>
-            <artifactId>n-rpc-common</artifactId>
-            <version>${revision}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.example</groupId>
-            <artifactId>n-rpc-register-api</artifactId>
-            <version>${revision}</version>
-        </dependency>
-    </dependencies>
+    <modules>
+        <module>n-rpc-register-api</module>
+        <module>n-rpc-register-zookeeper</module>
+    </modules>
 </project>

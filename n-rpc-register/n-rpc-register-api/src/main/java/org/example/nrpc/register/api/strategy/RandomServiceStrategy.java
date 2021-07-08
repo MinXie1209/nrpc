@@ -4,8 +4,6 @@ import org.example.nrpc.register.api.model.RpcServiceInstance;
 
 import java.util.List;
 import java.util.Random;
-import java.util.Set;
-import java.util.concurrent.CopyOnWriteArraySet;
 
 /**
  * 随机获取服务实例

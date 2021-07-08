@@ -2,10 +2,6 @@ package org.example.nrpc.register.api;
 
 import org.example.nrpc.register.api.model.RpcServiceInstance;
 
-import java.util.List;
-import java.util.Map;
-import java.util.function.Consumer;
-
 /**
  * 服务注册接口
  *

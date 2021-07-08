@@ -3,21 +3,28 @@
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <parent>
-        <artifactId>n-rpc</artifactId>
+        <artifactId>n-rpc-register</artifactId>
         <groupId>org.example</groupId>
         <version>${revision}</version>
-        <relativePath>../pom.xml</relativePath>
     </parent>
     <modelVersion>4.0.0</modelVersion>
-    <packaging>pom</packaging>
-    <artifactId>n-rpc-register</artifactId>
+
+    <artifactId>n-rpc-register-nacos</artifactId>
+
     <properties>
         <maven.compiler.source>8</maven.compiler.source>
         <maven.compiler.target>8</maven.compiler.target>
     </properties>
-    <modules>
-        <module>n-rpc-register-api</module>
-        <module>n-rpc-register-zookeeper</module>
-        <module>n-rpc-register-nacos</module>
-    </modules>
+    <dependencies>
+        <dependency>
+            <groupId>com.alibaba.nacos</groupId>
+            <artifactId>nacos-client</artifactId>
+            <version>2.0.2</version>
+        </dependency>
+        <dependency>
+            <groupId>org.example</groupId>
+            <artifactId>n-rpc-register-api</artifactId>
+            <version>${revision}</version>
+        </dependency>
+    </dependencies>
 </project>

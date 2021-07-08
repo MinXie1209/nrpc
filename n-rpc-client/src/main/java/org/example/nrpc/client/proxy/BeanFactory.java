@@ -2,6 +2,7 @@ package org.example.nrpc.client.proxy;
 
 import io.netty.channel.Channel;
 import lombok.Data;
+import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 import net.sf.cglib.proxy.Enhancer;
 import org.example.nrpc.client.RpcClient;
@@ -10,10 +11,14 @@ import org.example.nrpc.common.model.RpcAddress;
 import org.example.nrpc.register.api.RegisterConsumer;
 import org.example.nrpc.register.api.RpcRegister;
 import org.example.nrpc.register.api.model.RpcServiceInstance;
+import org.example.nrpc.register.api.strategy.RandomServiceStrategy;
+import org.example.nrpc.register.api.strategy.RoundRobinServiceStrategy;
+import org.example.nrpc.register.api.strategy.ServiceStrategy;
 
 import java.rmi.registry.Registry;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.function.Consumer;
 
@@ -27,11 +32,13 @@ public class BeanFactory {
     private static Enhancer enhancer = new Enhancer();
     private static RpcClient rpcClient;
     //服务名 多个服务实例
-    private static Map<String, Set<RpcServiceInstance>> serviceMap = new HashMap<>();
+    private static final Map<String, List<RpcServiceInstance>> serviceMap = new HashMap<>();
     //连接
     private static final Map<RpcAddress, Channel> channelMap = new HashMap<>();
     //Consumer
-    private static Map<RpcAddress, Consumer<Channel>> consumerMap = new HashMap<>();
+    private static final Map<RpcAddress, Consumer<Channel>> consumerMap = new HashMap<>();
+
+    private static final Map<String, ServiceStrategy> strategyMap = new HashMap();
 
     public static void setRpcClient(RpcClient rpcClient) {
         BeanFactory.rpcClient = rpcClient;
@@ -39,8 +46,25 @@ public class BeanFactory {
 
     public static <T> T getBean(Class<T> tClass) {
         enhancer.setSuperclass(tClass);
-        enhancer.setCallback(new RpcMethodInterceptor(channelMap.get("")));
+        //策略获取
+        Channel channel = acquireChannelToStrategy(tClass.getName());
+        enhancer.setCallback(new RpcMethodInterceptor(channel));
         return (T) enhancer.create();
+    }
+
+    private static Channel acquireChannelToStrategy(String serviceName) {
+        //策略应该与服务名挂钩
+        ServiceStrategy serviceStrategy = strategyMap.get(serviceName);
+        if (serviceStrategy == null) {
+            throw new RuntimeException("找不到服务实例:" + serviceName);
+        }
+        RpcServiceInstance serviceInstance = serviceStrategy.getServiceInstance(serviceMap.get(serviceName));
+        if (serviceInstance == null) {
+            throw new RuntimeException("找不到服务实例:" + serviceName);
+        }
+        Channel channel = channelMap.get(new RpcAddress(serviceInstance.getAddress(), serviceInstance.getPort()));
+        if (channel == null) throw new RuntimeException("找不到可用连接");
+        return channel;
     }
 
     public static void addRegister(RpcRegister rpcRegister) {
@@ -93,9 +117,11 @@ public class BeanFactory {
             if (serviceMap.containsKey(rpcServiceInstance.getServiceName())) {
                 serviceMap.get(rpcServiceInstance.getServiceName()).add(rpcServiceInstance);
             } else {
-                Set<RpcServiceInstance> set = new CopyOnWriteArraySet<>();
-                set.add(rpcServiceInstance);
-                serviceMap.put(rpcServiceInstance.getServiceName(), set);
+                List<RpcServiceInstance> list = new CopyOnWriteArrayList<>();
+                list.add(rpcServiceInstance);
+                serviceMap.put(rpcServiceInstance.getServiceName(), list);
+                //添加服务获取策略
+                strategyMap.put(rpcServiceInstance.getServiceName(), new RoundRobinServiceStrategy());
             }
         }
         synchronized (channelMap) {

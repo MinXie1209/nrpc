@@ -2,7 +2,7 @@ package org.example.nrpc.client.proxy;
 
 import io.netty.channel.Channel;
 import lombok.Data;
-import lombok.NonNull;
+import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import net.sf.cglib.proxy.Enhancer;
 import org.example.nrpc.client.RpcClient;
@@ -11,16 +11,15 @@ import org.example.nrpc.common.model.RpcAddress;
 import org.example.nrpc.register.api.RegisterConsumer;
 import org.example.nrpc.register.api.RpcRegister;
 import org.example.nrpc.register.api.model.RpcServiceInstance;
-import org.example.nrpc.register.api.strategy.RandomServiceStrategy;
 import org.example.nrpc.register.api.strategy.RoundRobinServiceStrategy;
 import org.example.nrpc.register.api.strategy.ServiceStrategy;
 
-import java.rmi.registry.Registry;
 import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
-import java.util.concurrent.CopyOnWriteArraySet;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Consumer;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /**
  * @author 江南小俊
@@ -31,6 +30,8 @@ import java.util.function.Consumer;
 public class BeanFactory {
     private static Enhancer enhancer = new Enhancer();
     private static RpcClient rpcClient;
+    @Setter
+    private static RpcRegister rpcRegister;
     //服务名 多个服务实例
     private static final Map<String, List<RpcServiceInstance>> serviceMap = new HashMap<>();
     //连接
@@ -62,13 +63,14 @@ public class BeanFactory {
         if (serviceInstance == null) {
             throw new RuntimeException("找不到服务实例:" + serviceName);
         }
+        log.debug("{}", serviceInstance);
         Channel channel = channelMap.get(new RpcAddress(serviceInstance.getAddress(), serviceInstance.getPort()));
         if (channel == null) throw new RuntimeException("找不到可用连接");
         return channel;
     }
 
-    public static void addRegister(RpcRegister rpcRegister) {
-        rpcRegister.addListener(new RegisterConsumer<RpcServiceInstance>() {
+    public static void addListener(String serviceName) {
+        rpcRegister.addListener(serviceName, new RegisterConsumer<RpcServiceInstance>() {
 
             @Override
             public void accept(RpcServiceInstance rpcServiceInstance) {
@@ -81,7 +83,38 @@ public class BeanFactory {
                 log.debug("删除服务实例：{}", rpcServiceInstance);
                 removeServiceInstance(rpcServiceInstance);
             }
+
+            @Override
+            public void updateAll(List<RpcServiceInstance> list) {
+                log.debug("更新所有实例：{}", list);
+                updateServiceInstances(serviceName, list);
+            }
         });
+    }
+
+    //更新所有实例
+    private static void updateServiceInstances(String serviceName, List<RpcServiceInstance> list) {
+        synchronized (serviceMap) {
+            if (serviceMap.containsKey(serviceName)) {
+                List<RpcServiceInstance> oldList = serviceMap.get(serviceName);
+                //需要比对 两次遍历
+                List<RpcServiceInstance> removeList = oldList.stream().filter(item -> !list.contains(item)).collect(Collectors.toList());
+                List<RpcServiceInstance> addList = list.stream().filter(item -> !oldList.contains(item)).collect(Collectors.toList());
+                for (RpcServiceInstance rpcServiceInstance : removeList) {
+                    removeServiceInstance(rpcServiceInstance);
+                }
+                for (RpcServiceInstance rpcServiceInstance : addList) {
+                    addServiceInstance(rpcServiceInstance);
+                }
+            } else {
+                if (list.size() > 0) {
+                    //addALl
+                    for (RpcServiceInstance rpcServiceInstance : list) {
+                        addServiceInstance(rpcServiceInstance);
+                    }
+                }
+            }
+        }
     }
 
     private static void removeServiceInstance(RpcServiceInstance rpcServiceInstance) {
@@ -90,15 +123,29 @@ public class BeanFactory {
                 boolean res = serviceMap.get(rpcServiceInstance.getServiceName()).removeIf(item ->
                         item.getAddress().equals(rpcServiceInstance.getAddress()) && item.getPort().equals(rpcServiceInstance.getPort())
                 );
-                log.debug("{}", res ? "删除成功" : "删除失败");
+                log.debug("{}-{}", rpcServiceInstance, res ? "删除成功" : "删除失败");
             }
         }
         synchronized (channelMap) {
+            //这里不能随便关闭连接
+            //先判断还有没有别的服务实例需要该连接
+            AtomicBoolean canDelete = new AtomicBoolean(true);
+            long count = serviceMap.values().stream().flatMap(list -> list.stream()).filter(instance -> instance.getAddress().equals(rpcServiceInstance.getAddress()) && instance.getPort().equals(rpcServiceInstance.getPort())).count();
+            serviceMap.values().forEach(instances -> {
+                instances.forEach(instance -> {
+                    if (instance.getAddress().equals(rpcServiceInstance.getAddress()) && instance.getPort().equals(rpcServiceInstance.getPort())) {
+                        canDelete.set(false);
+                        return;
+                    }
+                });
+            });
             RpcAddress rpcAddress = new RpcAddress(rpcServiceInstance.getAddress(), rpcServiceInstance.getPort());
-            if (channelMap.containsKey(rpcAddress)) {
+            if (channelMap.containsKey(rpcAddress) && count == 0) {
                 Channel channel = channelMap.remove(rpcAddress);
                 channel.close();
                 log.debug("关闭channel");
+            } else {
+                log.debug("连接剩余服务实例:{}", count);
             }
         }
     }
@@ -159,6 +206,8 @@ public class BeanFactory {
                         rpcClient.run(consumerMap.get(k), k);
                     }
                 });
+            } else {
+                log.debug("channel已关闭,不重新连接");
             }
         }
 

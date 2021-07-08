@@ -1,5 +1,6 @@
 package org.example.nrpc.register.api;
 
+import java.util.List;
 import java.util.function.Consumer;
 
 /**
@@ -8,4 +9,6 @@ import java.util.function.Consumer;
  **/
 public interface RegisterConsumer<T> extends Consumer<T> {
     void cancel(T t);
+
+    void updateAll(List<T> tList);
 }

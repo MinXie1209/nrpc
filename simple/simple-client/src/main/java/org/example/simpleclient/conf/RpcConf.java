@@ -4,6 +4,8 @@ import cn.hutool.core.util.ServiceLoaderUtil;
 import org.example.nrpc.client.RpcClient;
 import org.example.nrpc.client.proxy.BeanFactory;
 import org.example.nrpc.register.api.RpcRegister;
+import org.example.nrpc.simple.api.GoodsService;
+import org.example.nrpc.simple.api.OrderService;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
@@ -32,8 +34,10 @@ public class RpcConf implements ApplicationRunner {
     }
 
     @Override
-    public void run(ApplicationArguments args) throws Exception {
+    public void run(ApplicationArguments args) {
         BeanFactory.setRpcClient(rpcClient());
-        BeanFactory.addRegister(rpcRegister());
+        BeanFactory.setRpcRegister(rpcRegister());
+        BeanFactory.addListener(OrderService.class.getName());
+        BeanFactory.addListener(GoodsService.class.getName());
     }
 }

@@ -1,13 +1,10 @@
 package org.example.nrpc.register;
 
 import com.google.auto.service.AutoService;
-import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.curator.framework.CuratorFrameworkFactory;
-import org.apache.curator.framework.recipes.cache.ChildData;
 import org.apache.curator.framework.recipes.cache.CuratorCache;
-import org.apache.curator.framework.recipes.cache.CuratorCacheListener;
 import org.apache.curator.retry.RetryForever;
 import org.apache.curator.x.discovery.ServiceDiscovery;
 import org.apache.curator.x.discovery.ServiceDiscoveryBuilder;
@@ -18,10 +15,6 @@ import org.example.nrpc.register.api.RegisterConsumer;
 import org.example.nrpc.register.api.RpcRegister;
 import org.example.nrpc.register.api.model.RpcServiceInstance;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.function.Consumer;
 
 /**
  * Zookeeper实现服务注册
@@ -67,9 +60,60 @@ public class ZookeeperRegister implements RpcRegister {
         discovery.registerService(rpcService);
     }
 
+//    @Override
+//    public void addListener(RegisterConsumer<RpcServiceInstance> consumer) {
+////        CuratorCache cache = CuratorCache.builder(client, BASE_PATH).build();
+////        cache.listenable().addListener((type, oldData, data) -> {
+////            log.debug("监听节点变化:-{}-:{}->{}", type, oldData, data);
+////            //拿到新数据进行处理
+////            //oldData-->data    (null--->data)新增
+////            //oldData-->data    (oldData--->null)删除
+////            if (data == null) {
+////                //取前面的data
+////                try {
+////                    //data==[]? 没有数据新增
+////                    if (oldData.getData().length == 0) {
+////                        return;
+////                    }
+////                    ServiceInstance serviceInstance =
+////                            new JsonInstanceSerializer(Object.class).deserialize(oldData.getData());
+////                    log.debug("旧数据:{}", serviceInstance);
+////                    consumer.cancel(RpcServiceInstance.builder()
+////                            .serviceName(serviceInstance.getName())
+////                            .address(serviceInstance.getAddress())
+////                            .port(serviceInstance.getPort())
+////                            .payload(serviceInstance.getPayload())
+////                            .build());
+////                } catch (Exception e) {
+////                    e.printStackTrace();
+////                }
+////            } else {
+////                if (data.getData().length == 0) {
+////                    return;
+////                }
+////                //构造一个map
+////                try {
+////                    ServiceInstance serviceInstance =
+////                            new JsonInstanceSerializer(Object.class).deserialize(data.getData());
+////                    log.debug("新数据:{}", serviceInstance);
+////                    consumer.accept(RpcServiceInstance.builder()
+////                            .serviceName(serviceInstance.getName())
+////                            .address(serviceInstance.getAddress())
+////                            .port(serviceInstance.getPort())
+////                            .payload(serviceInstance.getPayload())
+////                            .build());
+////                } catch (Exception e) {
+////                    e.printStackTrace();
+////                }
+////            }
+////        });
+////        cache.start();
+////        log.debug("开始监听节点变化");
+//    }
+
     @Override
-    public void addListener(RegisterConsumer<RpcServiceInstance> consumer) {
-        CuratorCache cache = CuratorCache.builder(client, BASE_PATH).build();
+    public void addListener(String serviceName, RegisterConsumer<RpcServiceInstance> consumer) {
+        CuratorCache cache = CuratorCache.builder(client, BASE_PATH + "/" + serviceName).build();
         cache.listenable().addListener((type, oldData, data) -> {
             log.debug("监听节点变化:-{}-:{}->{}", type, oldData, data);
             //拿到新数据进行处理

@@ -7,8 +7,10 @@ import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.example.nrpc.client.RpcClient;
+import org.example.nrpc.common.model.RpcAddress;
 
 import java.util.concurrent.TimeUnit;
+import java.util.function.Consumer;
 
 /**
  * 连接监听
@@ -20,16 +22,20 @@ import java.util.concurrent.TimeUnit;
 @RequiredArgsConstructor
 public class ConnectFutureListener implements ChannelFutureListener {
     @NonNull
+    private Consumer<Channel> consumer;
+    @NonNull
     private RpcClient rpcClient;
+    @NonNull
+    private RpcAddress rpcAddress;
 
     @Override
     public void operationComplete(ChannelFuture future) {
         if (future.isSuccess()) {
             log.debug("连接成功");
-            rpcClient.setChannel(future.channel());
+            consumer.accept(future.channel());
         } else {
             log.debug("连接失败，1s后重新建立连接");
-            future.channel().eventLoop().schedule(rpcClient, 1, TimeUnit.SECONDS);
+            future.channel().eventLoop().schedule(() -> rpcClient.run(consumer, rpcAddress), 1, TimeUnit.SECONDS);
         }
     }
 }

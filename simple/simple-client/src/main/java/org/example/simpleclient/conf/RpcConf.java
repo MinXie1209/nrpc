@@ -1,7 +1,9 @@
 package org.example.simpleclient.conf;
 
+import cn.hutool.core.util.ServiceLoaderUtil;
 import org.example.nrpc.client.RpcClient;
 import org.example.nrpc.client.proxy.BeanFactory;
+import org.example.nrpc.register.api.RpcRegister;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
@@ -14,22 +16,24 @@ import org.springframework.context.annotation.Configuration;
  **/
 @Configuration
 public class RpcConf implements ApplicationRunner {
-    @Value("${nrpc.server.host}")
-    private String host;
-    @Value("${nrpc.server.port}")
-    private int port;
+    @Value("${nrpc.register.connectString}")
+    private String connectString;
 
     @Bean(initMethod = "init", destroyMethod = "destroy")
     public RpcClient rpcClient() {
-        return new RpcClient("127.0.0.1", port);
+        return new RpcClient();
+    }
+
+    @Bean(destroyMethod = "destroy")
+    RpcRegister rpcRegister() {
+        RpcRegister rpcRegister = ServiceLoaderUtil.loadFirstAvailable(RpcRegister.class);
+        rpcRegister.init(connectString);
+        return rpcRegister;
     }
 
     @Override
     public void run(ApplicationArguments args) throws Exception {
         BeanFactory.setRpcClient(rpcClient());
-        Thread thread = new Thread(rpcClient());
-        thread.setName("-rpcClient-");
-        thread.setDaemon(true);
-        thread.start();
+        BeanFactory.addRegister(rpcRegister());
     }
 }

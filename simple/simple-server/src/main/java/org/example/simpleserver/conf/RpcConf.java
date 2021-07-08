@@ -6,7 +6,9 @@ import org.example.nrpc.common.model.RpcAddress;
 import org.example.nrpc.register.api.RpcRegister;
 import org.example.nrpc.server.RpcServer;
 import org.example.nrpc.server.util.ServiceManager;
+import org.example.nrpc.simple.api.GoodsService;
 import org.example.nrpc.simple.api.OrderService;
+import org.example.simpleserver.impl.GoodsServiceImpl;
 import org.example.simpleserver.impl.OrderServiceImpl;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.ApplicationArguments;
@@ -47,6 +49,7 @@ public class RpcConf implements ApplicationRunner {
         ServiceManager.setRpcAddress(new RpcAddress(host, port));
         ServiceManager.setRpcRegister(rpcRegister());
         ServiceManager.register(OrderService.class, OrderServiceImpl.class);
+        ServiceManager.register(GoodsService.class, GoodsServiceImpl.class);
     }
 
     @Override

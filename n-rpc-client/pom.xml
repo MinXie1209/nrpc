@@ -21,5 +21,10 @@
             <artifactId>n-rpc-common</artifactId>
             <version>${revision}</version>
         </dependency>
+        <dependency>
+            <groupId>org.example</groupId>
+            <artifactId>n-rpc-register-api</artifactId>
+            <version>${revision}</version>
+        </dependency>
     </dependencies>
 </project>

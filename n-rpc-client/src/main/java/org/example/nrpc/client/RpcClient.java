@@ -13,6 +13,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.example.nrpc.client.handler.RpcClientHandler;
 import org.example.nrpc.client.listener.ConnectFutureListener;
 import org.example.nrpc.client.proxy.BeanFactory;
+import org.example.nrpc.common.model.RpcAddress;
 import org.example.nrpc.common.protostuff.ProtostuffDecoder;
 import org.example.nrpc.common.protostuff.ProtostuffEncoder;
 import org.example.nrpc.common.handler.HeartbeatHandler;
@@ -21,6 +22,7 @@ import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
+import java.util.function.Consumer;
 
 /**
  * Rpc客户端
@@ -31,37 +33,9 @@ import java.util.concurrent.Future;
 @Slf4j
 @Data
 @RequiredArgsConstructor
-public class RpcClient implements Runnable {
+public class RpcClient {
     private EventLoopGroup group;
     private Bootstrap bootstrap;
-    @NonNull
-    private String inetHost;
-    @NonNull
-    private int inetPort;
-
-    private Channel channel;
-    private ChannelFutureListener channelFutureListener = new ConnectFutureListener(this);
-
-    public static void main(String[] args) {
-        RpcClient rpcClient = new RpcClient("127.0.0.1", 8000);
-        rpcClient.init();
-        Thread thread = new Thread(rpcClient);
-        thread.setDaemon(false);
-        thread.start();
-        try {
-            Thread.sleep(5000);
-            BeanFactory.setRpcClient(rpcClient);
-//            OrderService orderService = BeanFactory.getBean(OrderService.class);
-//            orderService.getOrderStatus("OD91323612369213");
-//            String orderNo = "OD123721037021";
-//            Future<Integer> orderStatus = orderService.getOrderStatusAsync(orderNo);
-//            log.info("订单-{}-状态：{}", orderNo, orderStatus.get());
-        } catch (InterruptedException e) {
-            e.printStackTrace();}
-//        } catch (ExecutionException e) {
-//            e.printStackTrace();
-//        }
-    }
 
     @PostConstruct
     public void init() {
@@ -87,10 +61,9 @@ public class RpcClient implements Runnable {
 
     }
 
-    @Override
-    public void run() {
-        ChannelFuture channelFuture = bootstrap.connect(inetHost, inetPort);
-        channelFuture.addListener(channelFutureListener);
+    public void run(Consumer<Channel> consumer, RpcAddress rpcAddress) {
+        ChannelFuture channelFuture = bootstrap.connect(rpcAddress.getHost(), rpcAddress.getPort());
+        channelFuture.addListener(new ConnectFutureListener(consumer, this, rpcAddress));
     }
 
     @PreDestroy

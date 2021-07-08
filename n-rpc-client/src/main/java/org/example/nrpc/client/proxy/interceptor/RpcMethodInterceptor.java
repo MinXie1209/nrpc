@@ -1,5 +1,6 @@
 package org.example.nrpc.client.proxy.interceptor;
 
+import io.netty.channel.Channel;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -26,7 +27,7 @@ import java.util.concurrent.Future;
 public class RpcMethodInterceptor implements MethodInterceptor {
     private ProxyExecutor proxyExecutor = ProxyExecutor.newInstance();
     @NonNull
-    private RpcClient rpcClient;
+    private Channel channel;
     /**
      * key: 请求id
      * value: 请求的Future结果 （收到请求结果时操作）
@@ -81,7 +82,7 @@ public class RpcMethodInterceptor implements MethodInterceptor {
         //封装请求
         RpcMsg request = RpcMsg.request(requestId, method, args);
         //发送请求给服务端
-        rpcClient.getChannel().writeAndFlush(request);
+        channel.writeAndFlush(request);
         log.debug("发送请求:{}", request);
     }
 

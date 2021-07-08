@@ -2,6 +2,10 @@ package org.example.nrpc.register.api;
 
 import org.example.nrpc.register.api.model.RpcServiceInstance;
 
+import java.util.List;
+import java.util.Map;
+import java.util.function.Consumer;
+
 /**
  * 服务注册接口
  *
@@ -12,6 +16,8 @@ public interface RpcRegister {
     void init(String connectString);
 
     void register(RpcServiceInstance rpcServiceInstance) throws Exception;
+
+    void addListener(RegisterConsumer<RpcServiceInstance> consumer);
 
     void destroy();
 }

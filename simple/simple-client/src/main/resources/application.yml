@@ -1,0 +1,7 @@
+server:
+  port: 8000
+nrpc:
+  register:
+    connectString: 127.0.0.1:8848
+  client:
+    enabled: true

@@ -14,6 +14,7 @@
         <module>n-rpc-common</module>
         <module>simple</module>
         <module>n-rpc-register</module>
+        <module>n-rpc-spring-boot</module>
     </modules>
 
     <properties>

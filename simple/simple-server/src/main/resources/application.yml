@@ -1,0 +1,8 @@
+server:
+  port: 7000
+nrpc:
+  register:
+    connectString: 127.0.0.1:8848
+  server:
+    address: 127.0.0.1
+    port: 9000

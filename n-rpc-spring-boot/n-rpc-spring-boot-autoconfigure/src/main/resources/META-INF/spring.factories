@@ -1,0 +1,2 @@
+org.springframework.boot.autoconfigure.EnableAutoConfiguration=com.gitee.jnxj.nrpc.spring.boot.autoconfigure\
+  .RpcClientConfiguration,com.gitee.jnxj.nrpc.spring.boot.autoconfigure.RpcServerConfiguration

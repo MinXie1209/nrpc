@@ -33,7 +33,7 @@ public class NacosRegister implements RpcRegister {
             log.debug("NacosRegister init...");
         } catch (NacosException e) {
             e.printStackTrace();
-            log.error("", e);
+            log.error("Nacos初始失败，请检查地址是否正确：{}-", connectString, e);
         }
     }
 

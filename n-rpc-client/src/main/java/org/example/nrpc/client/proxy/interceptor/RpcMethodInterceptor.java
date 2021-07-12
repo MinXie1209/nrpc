@@ -8,6 +8,7 @@ import net.sf.cglib.proxy.MethodInterceptor;
 import net.sf.cglib.proxy.MethodProxy;
 import org.example.nrpc.client.RpcClient;
 import org.example.nrpc.client.util.ReturnManager;
+import org.example.nrpc.common.listener.RpcCompletableFuture;
 import org.example.nrpc.common.model.RpcMsg;
 import org.example.nrpc.client.proxy.ProxyExecutor;
 import org.example.nrpc.common.util.SnowflakeUtil;
@@ -52,7 +53,7 @@ public class RpcMethodInterceptor implements MethodInterceptor {
     public Object intercept(Object obj, Method method, Object[] args, MethodProxy proxy) {
         Class<?> returnType = method.getReturnType();
         if (Future.class.isAssignableFrom(returnType)) {
-            CompletableFuture<Object> completableFuture = new CompletableFuture<>();
+            CompletableFuture<Object> completableFuture = new RpcCompletableFuture<>();
             proxyExecutor.execute(() -> {
                 handler(method, args, completableFuture);
             });

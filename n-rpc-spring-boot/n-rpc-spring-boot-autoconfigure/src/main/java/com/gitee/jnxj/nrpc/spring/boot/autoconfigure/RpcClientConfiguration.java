@@ -37,7 +37,7 @@ import java.util.Map;
 @Configuration
 @EnableConfigurationProperties({RpcRegisterConfig.class, RpcClientConfig.class})
 @ConditionalOnExpression("'${nrpc.register.connectString:false}' ne 'false' && '${nrpc.client.enabled:false}' " +
-                                 "ne 'false'")
+        "ne 'false'")
 public class RpcClientConfiguration implements ApplicationRunner, ResourceLoaderAware {
     private MetadataReaderFactory metadataReaderFactory;
     private ResourcePatternResolver resourcePatternResolver;

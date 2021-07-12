@@ -53,6 +53,14 @@ public class BeanFactory {
         return (T) enhancer.create();
     }
 
+    public static <T> T getBean(RpcAddress rpcAddress, Class<T> tClass) {
+        enhancer.setSuperclass(tClass);
+        //指定获取
+        Channel channel = channelMap.get(rpcAddress);
+        enhancer.setCallback(new RpcMethodInterceptor(channel));
+        return (T) enhancer.create();
+    }
+
     private static Channel acquireChannelToStrategy(String serviceName) {
         //策略应该与服务名挂钩
         ServiceStrategy serviceStrategy = strategyMap.get(serviceName);

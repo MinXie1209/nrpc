@@ -25,4 +25,10 @@ public class RpcCompletableFuture<T> extends CompletableFuture<T> {
         }
         return complete;
     }
+
+    public static <U> RpcCompletableFuture<U> completedFuture(U value) {
+        RpcCompletableFuture<U> objectRpcCompletableFuture = new RpcCompletableFuture<>();
+        objectRpcCompletableFuture.complete(value);
+        return objectRpcCompletableFuture;
+    }
 }

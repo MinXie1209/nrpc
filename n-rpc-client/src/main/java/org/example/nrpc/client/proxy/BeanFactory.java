@@ -53,10 +53,13 @@ public class BeanFactory {
         return (T) enhancer.create();
     }
 
-    public static <T> T getBean(RpcAddress rpcAddress, Class<T> tClass) {
+    public static <T> T getBean(RpcAddress rpcAddress, Class<T> tClass) throws ChannelNotFoundException,
+            ChannelInActiveException {
         enhancer.setSuperclass(tClass);
         //指定获取
         Channel channel = channelMap.get(rpcAddress);
+        if (channel == null) throw new ChannelNotFoundException();
+        if (!channel.isActive()) throw new ChannelInActiveException();
         enhancer.setCallback(new RpcMethodInterceptor(channel));
         return (T) enhancer.create();
     }
@@ -106,8 +109,10 @@ public class BeanFactory {
             if (serviceMap.containsKey(serviceName)) {
                 List<RpcServiceInstance> oldList = serviceMap.get(serviceName);
                 //需要比对 两次遍历
-                List<RpcServiceInstance> removeList = oldList.stream().filter(item -> !list.contains(item)).collect(Collectors.toList());
-                List<RpcServiceInstance> addList = list.stream().filter(item -> !oldList.contains(item)).collect(Collectors.toList());
+                List<RpcServiceInstance> removeList =
+                        oldList.stream().filter(item -> !list.contains(item)).collect(Collectors.toList());
+                List<RpcServiceInstance> addList =
+                        list.stream().filter(item -> !oldList.contains(item)).collect(Collectors.toList());
                 for (RpcServiceInstance rpcServiceInstance : removeList) {
                     removeServiceInstance(rpcServiceInstance);
                 }
@@ -138,7 +143,8 @@ public class BeanFactory {
             //这里不能随便关闭连接
             //先判断还有没有别的服务实例需要该连接
             AtomicBoolean canDelete = new AtomicBoolean(true);
-            long count = serviceMap.values().stream().flatMap(list -> list.stream()).filter(instance -> instance.getAddress().equals(rpcServiceInstance.getAddress()) && instance.getPort().equals(rpcServiceInstance.getPort())).count();
+            long count =
+                    serviceMap.values().stream().flatMap(list -> list.stream()).filter(instance -> instance.getAddress().equals(rpcServiceInstance.getAddress()) && instance.getPort().equals(rpcServiceInstance.getPort())).count();
             serviceMap.values().forEach(instances -> {
                 instances.forEach(instance -> {
                     if (instance.getAddress().equals(rpcServiceInstance.getAddress()) && instance.getPort().equals(rpcServiceInstance.getPort())) {
@@ -207,13 +213,15 @@ public class BeanFactory {
         //是否要重新连接
         synchronized (channelMap) {
             if (channelMap.containsValue(channel)) {
-                consumerMap.forEach((k, v) -> {
-                    if (v.equals(channel)) {
+                Iterator<Map.Entry<RpcAddress, Channel>> iterator = channelMap.entrySet().iterator();
+                while (iterator.hasNext()) {
+                    Map.Entry<RpcAddress, Channel> next = iterator.next();
+                    if (next.getValue().equals(channel) && !channel.isActive()) {
                         //重新连接
-                        channelMap.put(k, null);
-                        rpcClient.run(consumerMap.get(k), k);
+                        channelMap.put(next.getKey(), null);
+                        rpcClient.run(consumerMap.get(next.getKey()), next.getKey());
                     }
-                });
+                }
             } else {
                 log.debug("channel已关闭,不重新连接");
             }
